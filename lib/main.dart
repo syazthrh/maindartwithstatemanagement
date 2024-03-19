@@ -1,31 +1,37 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:provider/provider.dart';
 
-// Define a provider for the counter
-final counterProvider = StateNotifierProvider<CounterNotifier, int>((ref) {
-  return CounterNotifier();
-});
+// Define a ChangeNotifier for the counter
+class Counter extends ChangeNotifier {
+  int _count = 0;
 
-// Define a state notifier for the counter
-class CounterNotifier extends StateNotifier<int> {
-  CounterNotifier() : super(0);
+  int get count => _count;
 
   void increment() {
-    state++;
+    _count++;
+    notifyListeners();
+  }
+
+  void decrement() {
+    _count--;
+    notifyListeners();
   }
 }
 
 void main() {
-  runApp(const ProviderScope(child: MyApp()));
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => Counter(),
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Riverpod Demo',
+      title: 'State Management Demo',
       theme: ThemeData(
         primaryColor: Colors.pink,
         colorScheme: ColorScheme.fromSwatch(primarySwatch: Colors.blueGrey)
@@ -36,14 +42,14 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MyHomePage extends ConsumerWidget {
+class MyHomePage extends StatelessWidget {
   const MyHomePage({Key? key, required this.title}) : super(key: key);
 
   final String title;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final counter = ref.watch(counterProvider);
+  Widget build(BuildContext context) {
+    final counter = Provider.of<Counter>(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -58,17 +64,30 @@ class MyHomePage extends ConsumerWidget {
               'You have clicked the button this many times:',
             ),
             Text(
-              '$counter',
+              '${counter.count}',
               style: Theme.of(context).textTheme.headline6,
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => ref.read(counterProvider.notifier).increment(),
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-        backgroundColor: Colors.pink,
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            onPressed: counter.decrement,
+            tooltip: 'Decrement',
+            child: const Icon(Icons.remove),
+            backgroundColor: Colors.pink,
+          ),
+          SizedBox(height: 16),
+          FloatingActionButton(
+            onPressed: counter.increment,
+            tooltip: 'Increment',
+            child: const Icon(Icons.add),
+            backgroundColor: Colors.pink,
+          ),
+        ],
       ),
     );
   }
